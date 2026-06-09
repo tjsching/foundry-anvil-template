@@ -50,6 +50,12 @@ def _create_bucket(s3_client, bucket: str, region: str) -> None:
             "TagSet": [
                 {"Key": "Name", "Value": bucket},
                 {"Key": "BCDRBackup", "Value": "daily"},
+                {"Key": "Department", "Value": "engineering"},
+                {"Key": "managed_by", "Value": "AFT"},
+                {"Key": "Environment", "Value": "prod"},
+                {"Key": "Product", "Value": "automation-toolkit"},
+                {"Key": "Service", "Value": "AFT"},
+                {"Key": "Team", "Value": "rockit"},
             ]
         },
     )
@@ -90,7 +96,15 @@ def _create_lock_table(dynamodb_client, table: str) -> None:
         ],
         BillingMode="PAY_PER_REQUEST",
         DeletionProtectionEnabled=True,
-        Tags=[{"Key": "Name", "Value": table}],
+        Tags=[
+            {"Key": "Name", "Value": table},
+            {"Key": "Department", "Value": "engineering"},
+            {"Key": "managed_by", "Value": "AFT"},
+            {"Key": "Environment", "Value": "prod"},
+            {"Key": "Product", "Value": "automation-toolkit"},
+            {"Key": "Service", "Value": "AFT"},
+            {"Key": "Team", "Value": "rockit"},
+        ],
     )
     dynamodb_client.get_waiter("table_exists").wait(
         TableName=table, WaiterConfig={"Delay": 5, "MaxAttempts": 12}

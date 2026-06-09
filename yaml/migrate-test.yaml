@@ -1,0 +1,22 @@
+schema_version: 1
+
+organizations:
+  - name: ie-prod
+    profile: ie-prod-01
+    regions:
+      - us-west-2
+    role_name: OrganizationAccountAccessRole
+    max_workers: 1
+    fail_fast: false
+    dry_run: true
+
+    include:
+      - "007993565256"
+      - "081125329557"
+
+    tasks:
+      - name: migrate_tfc_to_s3
+
+    metadata:
+      terraform_base_dir: "C:\\Users\\TJSCHING\\Documents\\GitHub\\ie-concourse-cloud-custodian-configs\\terraform\\accounts"
+      state_key: "cloud-custodian/terraform.tfstate"

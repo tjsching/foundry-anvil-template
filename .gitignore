@@ -161,10 +161,3 @@ cython_debug/
 
 # Ruff
 .ruff_cache
-
-# anvil results
-results/*
-!results/.gitkeep
-
-#macOS
-.DS_Store

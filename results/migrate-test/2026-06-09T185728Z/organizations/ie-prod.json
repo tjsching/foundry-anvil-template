@@ -1,0 +1,57 @@
+{
+  "organization": "ie-prod",
+  "generated_at": "2026-06-09T18:57:28.014664+00:00",
+  "dry_run": true,
+  "total_accounts": 2,
+  "account_results": [
+    {
+      "account_id": "007993565256",
+      "account_alias": "access-mgmt-dev-01",
+      "status": "success",
+      "started_at": "2026-06-09T18:57:25.780622+00:00",
+      "ended_at": "2026-06-09T18:57:27.666130+00:00",
+      "duration_seconds": 1.885568500001682,
+      "tasks": [
+        {
+          "task": "migrate_tfc_to_s3",
+          "region": "us-west-2",
+          "status": "success",
+          "started_at": "2026-06-09T18:57:26.876998+00:00",
+          "ended_at": "2026-06-09T18:57:27.663395+00:00",
+          "duration_seconds": 0.7864189999963855,
+          "result": {
+            "planned": true,
+            "migrated": false,
+            "bucket": "007993565256-us-west-2-terraform-state",
+            "key": "cloud-custodian/terraform.tfstate",
+            "lock_table": "007993565256-us-west-2-terraform-state-locking"
+          },
+          "error": null
+        }
+      ],
+      "error": null
+    },
+    {
+      "account_id": "081125329557",
+      "account_alias": "Log archive",
+      "status": "error",
+      "started_at": "2026-06-09T18:57:27.666329+00:00",
+      "ended_at": "2026-06-09T18:57:28.014293+00:00",
+      "duration_seconds": 0.3479735000000801,
+      "tasks": [
+        {
+          "task": "migrate_tfc_to_s3",
+          "region": "us-west-2",
+          "status": "error",
+          "started_at": "2026-06-09T18:57:28.013926+00:00",
+          "ended_at": "2026-06-09T18:57:28.014056+00:00",
+          "duration_seconds": 0.00013290000788401812,
+          "result": null,
+          "error": "terraform directory does not exist: C:\\Users\\TJSCHING\\Documents\\GitHub\\ie-concourse-cloud-custodian-configs\\terraform\\accounts\\aws-cloud-custodian-081125329557"
+        }
+      ],
+      "error": null
+    }
+  ],
+  "error": null
+}

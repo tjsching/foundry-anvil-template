@@ -1,0 +1,20 @@
+schema_version: 1
+
+organizations:
+  - name: artifact-platform-sandbox
+    profile: ie-prod-01
+    regions:
+      - us-west-2
+    role_name: OrganizationAccountAccessRole
+    max_workers: 1
+    fail_fast: false
+    dry_run: true
+
+    include:
+      - "081125329557"
+      - "081139832101"
+      - "083773015402"
+      - "088820692565"
+
+    tasks:
+      - name: backfill_state_bucket

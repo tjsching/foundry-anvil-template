@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ABLE-4226: TFC to S3 Migration - Account Inventory</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 2rem; background: #f8f9fa; }
+  h1 { color: #1a1a2e; }
+  h2 { color: #16213e; margin-top: 2rem; }
+  .summary { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 1.5rem 0; }
+  .card { background: white; border-radius: 8px; padding: 1.2rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-width: 180px; }
+  .card h3 { margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #666; text-transform: uppercase; }
+  .card .number { font-size: 2rem; font-weight: 700; color: #1a1a2e; }
+  .card.green .number { color: #059669; }
+  .card.orange .number { color: #d97706; }
+  .card.red .number { color: #dc2626; }
+  .card.gray .number { color: #6b7280; }
+  table { border-collapse: collapse; width: 100%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin: 1rem 0; }
+  th { background: #1a1a2e; color: white; text-align: left; padding: 0.75rem 1rem; font-size: 0.85rem; }
+  td { padding: 0.6rem 1rem; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+  tr:hover { background: #f3f4f6; }
+  .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+  .badge-backfill { background: #fef3c7; color: #92400e; }
+  .badge-ready { background: #d1fae5; color: #065f46; }
+  .badge-disabled { background: #f3f4f6; color: #6b7280; }
+  .badge-unknown { background: #fee2e2; color: #991b1b; }
+  .badge-suspended { background: #fecaca; color: #991b1b; }
+  .badge-error { background: #fee2e2; color: #991b1b; }
+  .error-msg { font-size: 0.8rem; color: #991b1b; font-family: monospace; }
+  details { margin: 1rem 0; }
+  summary { cursor: pointer; font-size: 1.1rem; font-weight: 600; color: #16213e; padding: 0.5rem 0; }
+  summary:hover { color: #1a1a2e; }
+  .generated { color: #9ca3af; font-size: 0.8rem; margin-top: 2rem; }
+  .filters { margin: 1rem 0; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .filters button { padding: 0.4rem 0.8rem; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; font-size: 0.85rem; transition: all 0.15s; }
+  .filters button:hover { background: #f3f4f6; }
+  .filters button.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+  .search { padding: 0.5rem 0.8rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; width: 250px; }
+  .hidden { display: none; }
+  .count { font-size: 0.8rem; color: #6b7280; margin-left: 0.5rem; }
+</style>
+</head>
+<body>
+<h1>ABLE-4226: TFC to S3 Migration - Account Inventory</h1>
+<p>Dry-run results from <code>backfill_state_bucket</code> task across all orgs. Generated 2026-06-09.</p>
+
+<div class="summary">
+  <div class="card"><h3>Total TF Directories</h3><div class="number">172</div></div>
+  <div class="card green"><h3>Ready to Migrate</h3><div class="number">89</div></div>
+  <div class="card orange"><h3>Need Backfill First</h3><div class="number">54</div></div>
+  <div class="card gray"><h3>Unactionable</h3><div class="number">20</div></div>
+</div>
+
+<div class="filters">
+  <input type="text" class="search" placeholder="Search by name or account ID..." onkeyup="filterTables()">
+  <button class="active" onclick="setFilter('all', this)">All</button>
+  <button onclick="setFilter('ready', this)">Ready</button>
+  <button onclick="setFilter('backfill', this)">Needs Backfill</button>
+</div>
+
+<details>
+<summary>ie-prod (<span class="ie-prod-count">102</span> accounts)</summary>
+<table class="filterable" id="ie-prod-table">
+<tr><th>Account ID</th><th>Name</th><th>Status</th></tr>
+<tr><td><code>635217461134</code></td><td>accelerated-reader-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>423846130710</code></td><td>accelerated-reader-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>100703515773</code></td><td>accelerated-reader-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>007993565256</code></td><td>access-mgmt-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>104087208993</code></td><td>access-mgmt-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>798363120615</code></td><td>admin-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>295343917751</code></td><td>admin-stage-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>817708078750</code></td><td>adminweb-dev-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>871363382551</code></td><td>aft-management-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>503561445170</code></td><td>atos-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>399781271057</code></td><td>awsvpn-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>040322340167</code></td><td>cicd-dev-02</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>877614936861</code></td><td>cicd-prod-03</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>601201407845</code></td><td>cicd-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>779846789059</code></td><td>corpsftp-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>925921199881</code></td><td>custodian-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>210682107077</code></td><td>data-sharing-dev-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>843087435045</code></td><td>data-sharing-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>335598561066</code></td><td>dna-ans-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>159314794006</code></td><td>dna-ans-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>287542892891</code></td><td>dna-ans-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>163021281700</code></td><td>dna-atd-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>054522427761</code></td><td>dna-atd-dev-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>076699366580</code></td><td>dna-atd-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>789146633817</code></td><td>dna-atd-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>767828763201</code></td><td>dna-core-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>976193246809</code></td><td>dna-core-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>886436963745</code></td><td>dna-core-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>497218593140</code></td><td>dna-equation-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>465063781237</code></td><td>dna-equation-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>640662335343</code></td><td>dna-equation-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>058264156981</code></td><td>dna-event-bus-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>756535689572</code></td><td>dna-metadata-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>873276770719</code></td><td>dna-metadata-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>272754771705</code></td><td>dna-metadata-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>281482331500</code></td><td>dna-ops-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>838155147727</code></td><td>dna-ops-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>730335573096</code></td><td>dna-ot-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>992382617015</code></td><td>dna-ot-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>059848745386</code></td><td>dna-ot-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>515024040495</code></td><td>dna-qa-automation-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>339713145909</code></td><td>dna-sharing-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>045401391576</code></td><td>dna-stage-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>271832422703</code></td><td>dna-stannis-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>141307689751</code></td><td>dna-stannis-stage-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>116260571562</code></td><td>dna-zelibrary-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>732722046092</code></td><td>dna-zelibrary-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>612012908225</code></td><td>dna-zelibrary-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>569426124630</code></td><td>dsar-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>114668181146</code></td><td>educlimber-dev-02</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>533267307534</code></td><td>educlimber-preprod-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>808652769409</code></td><td>educlimber-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>333917999316</code></td><td>educlimber-prod-02</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>537851145890</code></td><td>educlimber-stage-02</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>705754902799</code></td><td>eng-ai-tools-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>317520861924</code></td><td>eng-ai-tools-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>526367409790</code></td><td>eschooldata-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>330627509049</code></td><td>eschooldata-stage-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>933095778123</code></td><td>FastBridge Prod</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>072054646916</code></td><td>FastBridge TechOps</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>390763969141</code></td><td>FBL TechAdmin</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>620312075550</code></td><td>FBL-Dev</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>707716258081</code></td><td>FBL-DEV-SftpService</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>740258286727</code></td><td>fbl-microservices-dev-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>844777009538</code></td><td>fbl-microservices-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>786668262434</code></td><td>FBL-PROD-SftpService</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>037727099164</code></td><td>FBL-QA</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>668568755984</code></td><td>FBL-RnD</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>088404659971</code></td><td>FBL-RosterService-DEV</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>690222129619</code></td><td>FBL-RosterService-PROD</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>434072229540</code></td><td>global-tools-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>476400188766</code></td><td>ibx-dev-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>298981220711</code></td><td>ibx-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>364656710558</code></td><td>ie-auth-dev-02</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>985622081433</code></td><td>ie-auth-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>304292229090</code></td><td>ie-auth-stage-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>936263062056</code></td><td>ie-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>757417028998</code></td><td>io-restoration-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>340764056549</code></td><td>legalhold-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>851725349639</code></td><td>lightning-grader-dev-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>471112574154</code></td><td>lightning-grader-stage-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>315780192571</code></td><td>platform-cdi-dev-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>194722415855</code></td><td>raygpt-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>574070664815</code></td><td>research-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>485022336761</code></td><td>schelpers-dev-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>456167307077</code></td><td>schelpers-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>061479836437</code></td><td>schelpers-stage-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>735848266976</code></td><td>schoolcity-dev-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>599966164903</code></td><td>schoolcity-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>422814539222</code></td><td>schoolcity-stage-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>721612782231</code></td><td>schoolcity-test-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>807768957934</code></td><td>security-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>851725257433</code></td><td>software-mgmt-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>975050088296</code></td><td>state-portal-dev-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>992382606354</code></td><td>state-portal-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>851725373765</code></td><td>state-portal-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>861067169983</code></td><td>tenant-provisioning-dev-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>508480286229</code></td><td>tenant-provisioning-prod-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>389260834032</code></td><td>tenant-provisioning-stage-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>215754547270</code></td><td>ui-resources-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>647439605713</code></td><td>ui-resources-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>476016693509</code></td><td>viewpoint-archive-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+</table>
+
+</details>
+
+<details>
+<summary>renswiss (<span class="renswiss-count">41</span> accounts)</summary>
+<table class="filterable" id="renswiss-table">
+<tr><th>Account ID</th><th>Name</th><th>Status</th></tr>
+<tr><td><code>861276111673</code></td><td>ai-engineering-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>183631333361</code></td><td>centralized-api-download-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>412381738202</code></td><td>centralized-api-download-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>715841339719</code></td><td>centralized-api-download-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>654654315090</code></td><td>centralized-rostering-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>905418102630</code></td><td>centralized-rostering-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>730335645729</code></td><td>centralized-rostering-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>077293780550</code></td><td>client-mgmt-dev-02</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>248375503276</code></td><td>client-mgmt-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>279634127977</code></td><td>client-mgmt-stage-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>257394475202</code></td><td>dpr-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>270325283347</code></td><td>dpr-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>739848226193</code></td><td>dpr-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>881515375615</code></td><td>ecosystem-identity-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>551997405360</code></td><td>ecosystem-identity-stage-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>381492151590</code></td><td>global-user-registry-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>730335383267</code></td><td>global-user-registry-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>703574255278</code></td><td>kds-suite-pen-test-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>967267661750</code></td><td>kds-suite-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>520725971597</code></td><td>pie-ar-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>046084357585</code></td><td>pie-dev-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>302263088719</code></td><td>pie-star-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>975050016380</code></td><td>prlsi-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>851725288868</code></td><td>quiz-engine-dev-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>058264556348</code></td><td>quiz-engine-prod-02</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>339712756392</code></td><td>quiz-engine-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>654654511164</code></td><td>ren-ai-search-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>975050026998</code></td><td>ren-ai-search-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>839356699257</code></td><td>ren-next-ai-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>822191455248</code></td><td>research-data-store-prod-01</td><td><span class="badge badge-backfill">Needs Backfill</span></td></tr>
+<tr><td><code>328860485167</code></td><td>rock-services-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>448033706143</code></td><td>rock-services-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>891377302389</code></td><td>student-journey-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>058264492988</code></td><td>student-journey-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>851725391922</code></td><td>student-journey-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>822940271698</code></td><td>student-proficiency-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>095927792972</code></td><td>student-proficiency-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>387659571697</code></td><td>student-proficiency-stage-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>315396278618</code></td><td>teacher-journey-dev-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>539766959527</code></td><td>teacher-journey-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+<tr><td><code>266833220298</code></td><td>temporal-prod-01</td><td><span class="badge badge-ready">Ready</span></td></tr>
+</table>
+
+</details>
+
+<details>
+<summary>Unactionable (<span class="unactionable-count">20</span> accounts)</summary>
+<p>These accounts have terraform directories but are not reachable via any known org.</p>
+<table class="filterable" id="unactionable-table">
+<tr><th>Account ID</th><th>Name</th><th>Enabled</th><th>Notes</th></tr>
+<tr><td><code>051022873142</code></td><td>diagram-dev-01</td><td><span class="badge badge-disabled">Disabled</span></td><td>Disabled</td></tr>
+<tr><td><code>196177110668</code></td><td>aft-team-test-03</td><td><span class="badge badge-disabled">Disabled</span></td><td>AFT test account</td></tr>
+<tr><td><code>299296688218</code></td><td>fbl-sftpservice-bcdr-prod-01</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>BCDR - unknown org</td></tr>
+<tr><td><code>361769583310</code></td><td>dna-lib-stage-01</td><td><span class="badge badge-disabled">Disabled</span></td><td>Disabled</td></tr>
+<tr><td><code>410385708868</code></td><td>fbl-rosterservice-bcdr-prod-01</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>BCDR - unknown org</td></tr>
+<tr><td><code>412968796706</code></td><td>ioed-prod-02</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>Unknown status</td></tr>
+<tr><td><code>464115713454</code></td><td>aft-team-test-05</td><td><span class="badge badge-disabled">Disabled</span></td><td>AFT test account</td></tr>
+<tr><td><code>475194787459</code></td><td>(unnamed)</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>Unknown</td></tr>
+<tr><td><code>582867630720</code></td><td>aft-team-test-02</td><td><span class="badge badge-disabled">Disabled</span></td><td>AFT test account</td></tr>
+<tr><td><code>590184096223</code></td><td>educlimber-preprod-01</td><td><span class="badge badge-suspended">Suspended</span></td><td>SUSPENDED in ie-prod</td></tr>
+<tr><td><code>755219876814</code></td><td>fbl-microservices-bcdr-prod-01</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>BCDR - unknown org</td></tr>
+<tr><td><code>777362605421</code></td><td>ioed-stage-02</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>Unknown status</td></tr>
+<tr><td><code>780354554109</code></td><td>aft-team-test-prod-04</td><td><span class="badge badge-disabled">Disabled</span></td><td>AFT test account</td></tr>
+<tr><td><code>813656729457</code></td><td>fbl-techops-bcdr-prod-01</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>BCDR - unknown org</td></tr>
+<tr><td><code>842465349320</code></td><td>fbl-bcdr-prod-01</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>BCDR - unknown org</td></tr>
+<tr><td><code>891376979211</code></td><td>check-ins-dev-01</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>Unknown org</td></tr>
+<tr><td><code>895416482925</code></td><td>silver-db-prod-01</td><td><span class="badge badge-disabled">Disabled</span></td><td>Disabled</td></tr>
+<tr><td><code>927046305729</code></td><td>dna-lib-prod-01</td><td><span class="badge badge-disabled">Disabled</span></td><td>Disabled</td></tr>
+<tr><td><code>942756533068</code></td><td>silver-application-prod-01</td><td><span class="badge badge-disabled">Disabled</span></td><td>Disabled</td></tr>
+<tr><td><code>948495745810</code></td><td>fbl-techadmin-bcdr-prod-01</td><td><span class="badge badge-unknown">Unknown Org</span></td><td>BCDR - unknown org</td></tr>
+</table>
+</details>
+
+<h2>Migration Dry-Run Results</h2>
+<p>Dry-run of <code>migrate_tfc_to_s3</code> showing success and error cases. Run 2026-06-09.</p>
+<table>
+<tr><th>Account ID</th><th>Name</th><th>Bucket</th><th>State Key</th><th>Lock Table</th><th>Result</th></tr>
+<tr>
+  <td><code>007993565256</code></td>
+  <td>access-mgmt-dev-01</td>
+  <td><code>007993565256-us-west-2-terraform-state</code></td>
+  <td><code>cloud-custodian/terraform.tfstate</code></td>
+  <td><code>007993565256-us-west-2-terraform-state-locking</code></td>
+  <td><span class="badge badge-ready">Dry-run OK</span></td>
+</tr>
+<tr>
+  <td><code>081125329557</code></td>
+  <td>Log archive</td>
+  <td colspan="3"><span class="error-msg">terraform directory does not exist: ...aws-cloud-custodian-081125329557</span></td>
+  <td><span class="badge badge-error">Error</span></td>
+</tr>
+</table>
+
+<h2>Orgs with No Cloud Custodian Accounts</h2>
+<p>These orgs were checked but have zero accounts with terraform directories in the configs repo. No migration needed.</p>
+<table>
+<tr><th>Org</th><th>Management Profile</th><th>Active Accounts in Org</th><th>Reason</th></tr>
+<tr><td>ren-org-root</td><td><code>ren-org-root</code></td><td>—</td><td>No Cloud Custodian deployed to any account</td></tr>
+<tr><td>ie-control-tower</td><td><code>ie-control-tower</code></td><td>—</td><td>No Cloud Custodian deployed to any account</td></tr>
+<tr><td>nearpod-master</td><td><code>nearpod-master</code></td><td>—</td><td>No Cloud Custodian deployed to any account</td></tr>
+</table>
+
+<h2>Phase Plan</h2>
+<table>
+<tr><th>Phase</th><th>Action</th><th>Scope</th></tr>
+<tr><td>1</td><td>Run <code>migrate_tfc_to_s3</code> (live, single account)</td><td>1 account that already has the bucket (e.g., 007993565256)</td></tr>
+<tr><td>2</td><td>Run <code>backfill_state_bucket</code> (live)</td><td>54 accounts missing S3 + DynamoDB</td></tr>
+<tr><td>3</td><td>Run <code>migrate_tfc_to_s3</code> (live, all remaining)</td><td>142 remaining accounts</td></tr>
+<tr><td>4</td><td>Investigate unactionable accounts</td><td>20 accounts (BCDR org access needed)</td></tr>
+</table>
+
+<p class="generated">Generated by Anvil dry-run on 2026-06-09 | ABLE-4226</p>
+
+<script>
+let currentFilter = 'all';
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterTables();
+}
+
+function filterTables() {
+  const search = document.querySelector('.search').value.toLowerCase();
+  const tables = document.querySelectorAll('table.filterable');
+
+  tables.forEach(table => {
+    let visibleCount = 0;
+    const rows = table.querySelectorAll('tr:not(:first-child)');
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      const matchesSearch = !search || text.includes(search);
+
+      let matchesFilter = true;
+      if (currentFilter === 'ready') {
+        matchesFilter = row.innerHTML.includes('badge-ready');
+      } else if (currentFilter === 'backfill') {
+        matchesFilter = row.innerHTML.includes('badge-backfill');
+      }
+
+      if (matchesSearch && matchesFilter) {
+        row.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+
+    const id = table.id;
+    if (id === 'ie-prod-table') {
+      document.querySelector('.ie-prod-count').textContent = visibleCount;
+    } else if (id === 'renswiss-table') {
+      document.querySelector('.renswiss-count').textContent = visibleCount;
+    } else if (id === 'unactionable-table') {
+      document.querySelector('.unactionable-count').textContent = visibleCount;
+    }
+  });
+}
+</script>
+</body>
+</html>

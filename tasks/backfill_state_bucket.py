@@ -147,8 +147,20 @@ def run(
     if dry_run:
         if not bucket_existed:
             __LOGGER__.info(f"(dry-run) Would create bucket {bucket}")
+            __LOGGER__.info(
+                f"(dry-run) Bucket tags: Name={bucket}, "
+                "BCDRBackup=daily, Department=engineering, "
+                "managed_by=AFT, Environment=prod, "
+                "Product=automation-toolkit, Service=AFT, Team=rockit"
+            )
         if not table_existed:
             __LOGGER__.info(f"(dry-run) Would create lock table {lock_table}")
+            __LOGGER__.info(
+                f"(dry-run) Table tags: Name={lock_table}, "
+                "Department=engineering, managed_by=AFT, "
+                "Environment=prod, Product=automation-toolkit, "
+                "Service=AFT, Team=rockit"
+            )
         actions.record(
             f"(dry-run) Would backfill state infrastructure "
             f"for account {account_id}"

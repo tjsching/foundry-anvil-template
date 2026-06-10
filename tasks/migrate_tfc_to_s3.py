@@ -15,7 +15,7 @@ from anvil.actions import ActionRecorder
 
 __LOGGER__ = logging.getLogger(__name__)
 
-_BACKEND_TF = """\
+_BACKEND_OVERRIDE_TF = """\
 terraform {{
   backend "s3" {{
     bucket         = "{bucket}"
@@ -51,15 +51,17 @@ def _write_backend_override(
 ) -> Path:
     override = work_dir / "backend_override.tf"
     override.write_text(
-        _BACKEND_TF.format(
+        _BACKEND_OVERRIDE_TF.format(
             bucket=bucket, key=key, region=region, lock_table=lock_table
         )
     )
     return override
 
 
-def _run_terraform(args: list[str], work_dir: Path, env: dict) -> str:
-    cmd = ["terraform", *args]
+def _run_terraform(
+    args: list[str], work_dir: Path, env: dict, terraform_bin: str = "terraform"
+) -> str:
+    cmd = [terraform_bin, *args]
     __LOGGER__.debug(f"Running: {' '.join(cmd)}")
     result = subprocess.run(
         cmd,
@@ -106,6 +108,12 @@ def run(
             "migrate_tfc_to_s3 requires metadata.state_key to be a string"
         )
 
+    terraform_bin = metadata.get("terraform_bin", "terraform")
+    if not isinstance(terraform_bin, str):
+        raise RuntimeError(
+            "migrate_tfc_to_s3 requires metadata.terraform_bin to be a string"
+        )
+
     bucket = _bucket_name(account_id, region)
     lock_table = _lock_table_name(account_id, region)
     work_dir = Path(terraform_base_dir) / f"{dir_prefix}{account_id}"
@@ -128,11 +136,23 @@ def run(
         "AWS_DEFAULT_REGION": region,
         "PATH": subprocess.os.environ.get("PATH", ""),
         "HOME": subprocess.os.environ.get("HOME", ""),
+        "APPDATA": subprocess.os.environ.get("APPDATA", ""),
+        "TEMP": subprocess.os.environ.get("TEMP", ""),
+        "TMP": subprocess.os.environ.get("TMP", ""),
+        "SYSTEMROOT": subprocess.os.environ.get("SYSTEMROOT", ""),
         "TF_IN_AUTOMATION": "1",
         "TF_INPUT": "0",
     }
     if credentials.token:
         env["AWS_SESSION_TOKEN"] = credentials.token
+
+    tfc_config = subprocess.os.environ.get("TF_CLI_CONFIG_FILE", "")
+    if tfc_config:
+        env["TF_CLI_CONFIG_FILE"] = tfc_config
+
+    tfc_token = subprocess.os.environ.get("TF_TOKEN_app_terraform_io", "")
+    if tfc_token:
+        env["TF_TOKEN_app_terraform_io"] = tfc_token
 
     if dry_run:
         __LOGGER__.info(
@@ -151,20 +171,21 @@ def run(
             "lock_table": lock_table,
         }
 
+    target_override = work_dir / "backend_override.tf"
+
     with tempfile.TemporaryDirectory(prefix="anvil_migrate_") as tmp:
         override_path = _write_backend_override(
             Path(tmp), bucket, state_key, region, lock_table
         )
-        target_override = work_dir / "backend_override.tf"
         target_override.write_text(override_path.read_text())
 
         try:
-            __LOGGER__.info("Running terraform init -migrate-state")
+            __LOGGER__.info("Running terraform init -force-copy")
             _run_terraform(
                 [
                     "init",
-                    "-migrate-state",
                     "-force-copy",
+                    "-input=false",
                     f"-backend-config=bucket={bucket}",
                     f"-backend-config=key={state_key}",
                     f"-backend-config=region={region}",
@@ -173,14 +194,19 @@ def run(
                 ],
                 work_dir,
                 env,
+                terraform_bin,
             )
 
-            __LOGGER__.info("Running terraform plan to validate migrated state")
-            plan_output = _run_terraform(["plan", "-no-color"], work_dir, env)
-            has_changes = "No changes." not in plan_output
-        finally:
+            __LOGGER__.info("Running terraform state list to validate migrated state")
+            state_output = _run_terraform(
+                ["state", "list"], work_dir, env, terraform_bin
+            )
+        except Exception:
             if target_override.exists():
                 target_override.unlink()
+            raise
+
+    __LOGGER__.info(f"Migration complete — backend_override.tf left in {work_dir}")
 
     actions.record(
         f"Migrated Terraform state to s3://{bucket}/{state_key} "
@@ -193,5 +219,5 @@ def run(
         "bucket": bucket,
         "key": state_key,
         "lock_table": lock_table,
-        "plan_has_changes": has_changes,
+        "resource_count": len(state_output.strip().splitlines()),
     }

@@ -123,6 +123,53 @@ def run(
             f"terraform directory does not exist: {work_dir}"
         )
 
+    override_file = work_dir / "backend_override.tf"
+
+    if override_file.exists():
+        __LOGGER__.info(
+            f"backend_override.tf exists in {work_dir}, verifying state"
+        )
+        credentials = session.get_credentials().get_frozen_credentials()
+        check_env = {
+            "AWS_ACCESS_KEY_ID": credentials.access_key,
+            "AWS_SECRET_ACCESS_KEY": credentials.secret_key,
+            "AWS_DEFAULT_REGION": region,
+            "PATH": subprocess.os.environ.get("PATH", ""),
+            "HOME": subprocess.os.environ.get("HOME", ""),
+            "APPDATA": subprocess.os.environ.get("APPDATA", ""),
+            "TEMP": subprocess.os.environ.get("TEMP", ""),
+            "TMP": subprocess.os.environ.get("TMP", ""),
+            "SYSTEMROOT": subprocess.os.environ.get("SYSTEMROOT", ""),
+        }
+        if credentials.token:
+            check_env["AWS_SESSION_TOKEN"] = credentials.token
+        try:
+            state_output = _run_terraform(
+                ["state", "list"], work_dir, check_env, terraform_bin
+            )
+            resource_count = len(state_output.strip().splitlines())
+            __LOGGER__.info(
+                f"State verified ({resource_count} resources), skipping"
+            )
+            actions.record(
+                f"Already migrated — state verified for account {account_id} "
+                f"({resource_count} resources)"
+            )
+            return {
+                "planned": False,
+                "migrated": False,
+                "skipped": True,
+                "bucket": bucket,
+                "key": state_key,
+                "lock_table": lock_table,
+                "resource_count": resource_count,
+            }
+        except RuntimeError:
+            __LOGGER__.warning(
+                "State verification failed, removing override and re-migrating"
+            )
+            override_file.unlink()
+
     __LOGGER__.info(
         f"Verifying S3 bucket {bucket} and DynamoDB table {lock_table} exist"
     )

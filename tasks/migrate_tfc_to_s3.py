@@ -7,6 +7,7 @@ the state file.
 """
 
 import logging
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -26,6 +27,12 @@ terraform {{
   }}
 }}
 """
+
+
+def _force_remove(func, path, _exc_info):
+    import os, stat
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
 
 
 def _bucket_name(account_id: str, region: str) -> str:
@@ -220,6 +227,31 @@ def run(
 
     target_override = work_dir / "backend_override.tf"
 
+    dot_terraform = work_dir / ".terraform"
+    if dot_terraform.exists():
+        __LOGGER__.info("Removing stale .terraform directory")
+        shutil.rmtree(dot_terraform, onerror=_force_remove)
+
+    tfc_env = {
+        "PATH": subprocess.os.environ.get("PATH", ""),
+        "HOME": subprocess.os.environ.get("HOME", ""),
+        "APPDATA": subprocess.os.environ.get("APPDATA", ""),
+        "TEMP": subprocess.os.environ.get("TEMP", ""),
+        "TMP": subprocess.os.environ.get("TMP", ""),
+        "SYSTEMROOT": subprocess.os.environ.get("SYSTEMROOT", ""),
+        "TF_IN_AUTOMATION": "1",
+        "TF_INPUT": "0",
+    }
+    tfc_config = subprocess.os.environ.get("TF_CLI_CONFIG_FILE", "")
+    if tfc_config:
+        tfc_env["TF_CLI_CONFIG_FILE"] = tfc_config
+    tfc_token = subprocess.os.environ.get("TF_TOKEN_app_terraform_io", "")
+    if tfc_token:
+        tfc_env["TF_TOKEN_app_terraform_io"] = tfc_token
+
+    __LOGGER__.info("Step 1: Initializing against TFC backend")
+    _run_terraform(["init", "-input=false"], work_dir, tfc_env, terraform_bin)
+
     with tempfile.TemporaryDirectory(prefix="anvil_migrate_") as tmp:
         override_path = _write_backend_override(
             Path(tmp), bucket, state_key, region, lock_table
@@ -227,7 +259,7 @@ def run(
         target_override.write_text(override_path.read_text())
 
         try:
-            __LOGGER__.info("Running terraform init -force-copy")
+            __LOGGER__.info("Step 2: Running terraform init -force-copy (TFC → S3)")
             _run_terraform(
                 [
                     "init",

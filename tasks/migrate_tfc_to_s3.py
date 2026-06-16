@@ -28,6 +28,21 @@ terraform {{
 }}
 """
 
+_VERSIONS_TF = """\
+terraform {{
+  required_version = "~> 0.14.3"
+
+  backend "s3" {{
+    bucket         = "{bucket}"
+    key            = "{key}"
+    region         = "{region}"
+    dynamodb_table = "{lock_table}"
+    encrypt        = true
+    role_arn       = "arn:aws:iam::{account_id}:role/RockitTerraformCICD"
+  }}
+}}
+"""
+
 
 def _force_remove(func, path, _exc_info):
     import os, stat
@@ -130,11 +145,17 @@ def run(
             f"terraform directory does not exist: {work_dir}"
         )
 
+    versions_file = work_dir / "versions.tf"
     override_file = work_dir / "backend_override.tf"
 
-    if override_file.exists():
+    already_migrated = (
+        versions_file.exists()
+        and 'backend "s3"' in versions_file.read_text()
+    ) or override_file.exists()
+
+    if already_migrated:
         __LOGGER__.info(
-            f"backend_override.tf exists in {work_dir}, verifying state"
+            f"S3 backend already configured in {work_dir}, verifying state"
         )
         credentials = session.get_credentials().get_frozen_credentials()
         check_env = {
@@ -156,8 +177,25 @@ def run(
             )
             resource_count = len(state_output.strip().splitlines())
             __LOGGER__.info(
-                f"State verified ({resource_count} resources), skipping"
+                f"State verified ({resource_count} resources)"
             )
+
+            versions_content = versions_file.read_text()
+            if not ('backend "s3"' in versions_content
+                    and "role_arn" in versions_content):
+                versions_file.write_text(
+                    _VERSIONS_TF.format(
+                        bucket=bucket,
+                        key=state_key,
+                        region=region,
+                        lock_table=lock_table,
+                        account_id=account_id,
+                    )
+                )
+                if override_file.exists():
+                    override_file.unlink()
+                __LOGGER__.info("Finalized versions.tf with role_arn")
+
             actions.record(
                 f"Already migrated — state verified for account {account_id} "
                 f"({resource_count} resources)"
@@ -173,9 +211,10 @@ def run(
             }
         except RuntimeError:
             __LOGGER__.warning(
-                "State verification failed, removing override and re-migrating"
+                "State verification failed, re-migrating"
             )
-            override_file.unlink()
+            if override_file.exists():
+                override_file.unlink()
 
     __LOGGER__.info(
         f"Verifying S3 bucket {bucket} and DynamoDB table {lock_table} exist"
@@ -285,7 +324,19 @@ def run(
                 target_override.unlink()
             raise
 
-    __LOGGER__.info(f"Migration complete — backend_override.tf left in {work_dir}")
+    versions_file.write_text(
+        _VERSIONS_TF.format(
+            bucket=bucket,
+            key=state_key,
+            region=region,
+            lock_table=lock_table,
+            account_id=account_id,
+        )
+    )
+    if target_override.exists():
+        target_override.unlink()
+
+    __LOGGER__.info(f"Migration complete — versions.tf updated in {work_dir}")
 
     actions.record(
         f"Migrated Terraform state to s3://{bucket}/{state_key} "

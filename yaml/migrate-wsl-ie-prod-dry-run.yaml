@@ -8,7 +8,7 @@ organizations:
     role_name: OrganizationAccountAccessRole
     max_workers: 10
     fail_fast: false
-    dry_run: true
+    dry_run: false
 
     tasks:
       - name: migrate_tfc_to_s3

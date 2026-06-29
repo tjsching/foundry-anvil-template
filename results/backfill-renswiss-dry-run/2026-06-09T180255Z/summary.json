@@ -1,0 +1,30 @@
+{
+  "state": "completed_success",
+  "generated_at": "2026-06-09T18:02:55.644772+00:00",
+  "auth": [
+    {
+      "organization": "renswiss",
+      "status": "success",
+      "source": "sso",
+      "started_at": "2026-06-09T18:02:37.554183+00:00",
+      "ended_at": "2026-06-09T18:02:39.073531+00:00",
+      "duration_seconds": 1.5194167000008747,
+      "message": "Authenticated successfully.",
+      "remediation": null
+    }
+  ],
+  "organizations": [
+    {
+      "organization": "renswiss",
+      "total_accounts": 41,
+      "failed_accounts": 0,
+      "interrupted_accounts": 0,
+      "failed_tasks": 0,
+      "has_failures": false,
+      "error": null
+    }
+  ],
+  "total_failed_accounts": 0,
+  "total_interrupted_accounts": 0,
+  "total_failed_tasks": 0
+}

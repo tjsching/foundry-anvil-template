@@ -1,0 +1,30 @@
+{
+  "state": "completed_with_failures",
+  "generated_at": "2026-06-09T18:57:28.015173+00:00",
+  "auth": [
+    {
+      "organization": "ie-prod",
+      "status": "success",
+      "source": "sso",
+      "started_at": "2026-06-09T18:57:20.507165+00:00",
+      "ended_at": "2026-06-09T18:57:21.789471+00:00",
+      "duration_seconds": 1.2823398000036832,
+      "message": "Authenticated successfully.",
+      "remediation": null
+    }
+  ],
+  "organizations": [
+    {
+      "organization": "ie-prod",
+      "total_accounts": 2,
+      "failed_accounts": 1,
+      "interrupted_accounts": 0,
+      "failed_tasks": 1,
+      "has_failures": true,
+      "error": null
+    }
+  ],
+  "total_failed_accounts": 1,
+  "total_interrupted_accounts": 0,
+  "total_failed_tasks": 1
+}

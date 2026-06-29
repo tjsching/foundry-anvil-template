@@ -1,0 +1,19 @@
+schema_version: 1
+
+organizations:
+  - name: renswiss
+    profile: renswiss-payer-01
+    regions:
+      - us-west-2
+    role_name: OrganizationAccountAccessRole
+    max_workers: 10
+    fail_fast: false
+    dry_run: false
+
+    tasks:
+      - name: migrate_tfc_to_s3
+
+    metadata:
+      terraform_base_dir: "/home/travis/Documents/GitHub/ie-concourse-cloud-custodian-configs/terraform/accounts"
+      state_key: "cloud-custodian/terraform.tfstate"
+      terraform_bin: "terraform"
